@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"github.com/amirsobhani/melk_back/database"
 	"github.com/amirsobhani/melk_back/route"
 	"github.com/gofiber/fiber/v2"
@@ -27,21 +26,13 @@ func main() {
 		// Override default error handler
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
 			// Status code defaults to 500
-			code := fiber.StatusInternalServerError
 
 			// Retrieve the custom status code if it's a *fiber.Error
 			var e *fiber.Error
 			if errors.As(err, &e) {
-				code = e.Code
-			}
-
-			// Send custom error page
-			err = ctx.Status(code).SendFile(fmt.Sprintf("./%d.html", code))
-			if err != nil {
-				// In case the SendFile fails
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"data":    nil,
-					"message": "Internal Server Error",
+					"message": err.Error(),
 				})
 			}
 
