@@ -1,14 +1,11 @@
-package client
+package clientUserController
 
 import (
+	"github.com/amirsobhani/melk_back/app/Repository/otpClientRepository"
 	"github.com/amirsobhani/melk_back/app/models"
 	"github.com/amirsobhani/melk_back/app/requests"
-	"github.com/amirsobhani/melk_back/database"
 	"github.com/amirsobhani/melk_back/infastructure"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/datatypes"
-	"math/rand"
-	"time"
 )
 
 func Signup(c *fiber.Ctx) error {
@@ -28,11 +25,7 @@ func Signup(c *fiber.Ctx) error {
 		})
 	}
 
-	timeQuery := time.Now().Add(time.Minute * -4)
-	var countOtp int64
-	database.DB.Model(&models.Otp{
-		Mobile: user.Mobile,
-	}).Where("created_at >= ?", timeQuery).Count(&countOtp)
+	countOtp := otpClientRepository.CountValidation(user.Mobile)
 
 	if countOtp > 4 {
 		return infastructure.Output(c, &infastructure.OutputStruct{
@@ -41,17 +34,7 @@ func Signup(c *fiber.Ctx) error {
 		})
 	}
 
-	min := 1000
-	max := 8999
-	token := rand.Intn(rand.Intn(max)) + min
-
-	otp := models.Otp{
-		Token:    token,
-		Mobile:   user.Mobile,
-		TempData: datatypes.NewJSONType(*user),
-	}
-
-	database.DB.Create(&otp)
+	token := otpClientRepository.GenerateOtp(user)
 
 	return infastructure.Output(c, &infastructure.OutputStruct{
 		Data: token,

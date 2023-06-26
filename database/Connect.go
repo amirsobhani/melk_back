@@ -2,7 +2,7 @@ package database
 
 import (
 	"github.com/amirsobhani/melk_back/app/models"
-	"gorm.io/driver/postgres"
+	"github.com/gofiber/fiber/v2/utils"
 	"gorm.io/gorm"
 	"os"
 )
@@ -10,20 +10,30 @@ import (
 var DB *gorm.DB
 
 func Connect() error {
-	host := os.Getenv("DB_HOST")
-	dbname := os.Getenv("DB_DATABASE")
-	password := os.Getenv("DB_PASSWORD")
-	user := os.Getenv("DB_USERNAME")
-	port := os.Getenv("DB_PORT")
+	driver := os.Getenv("DB_DRIVER")
 
-	dsn := "host=" + host + " user=" + user + " password=" + password + " dbname=" + dbname + " port=" + port + " sslmode=disable TimeZone=Asia/Tehran"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	config := Config{
+		Host:     os.Getenv("DB_HOST"),
+		Database: os.Getenv("DB_DATABASE"),
+		Username: os.Getenv("DB_USERNAME"),
+		Password: os.Getenv("DB_PASSWORD"),
+		Port:     os.Getenv("DB_PORT"),
+	}
+
+	var err error
+
+	switch utils.ToLower(driver) {
+	case "mysql":
+		DB, err = MysqlDriver(&config)
+	case "postgres":
+		DB, err = PostgresqlDriver(&config)
+	default:
+		DB, err = PostgresqlDriver(&config)
+	}
 
 	if err != nil {
 		return err
 	}
-
-	DB = db
 
 	return nil
 }

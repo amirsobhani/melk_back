@@ -43,5 +43,8 @@ func main() {
 
 	route.Api(app)
 
-	app.Listen("127.0.0.1:8080")
+	err := app.Listen("127.0.0.1:8080")
+	if err != nil {
+		log.Fatalf("problem with run server: %s", err)
+	}
 }
