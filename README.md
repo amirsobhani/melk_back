@@ -1,5 +1,3 @@
-# melk_back
-
 ## run docker compose for init pgsql
 ```
 docker-compose up
