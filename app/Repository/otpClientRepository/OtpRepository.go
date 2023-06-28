@@ -33,3 +33,19 @@ func GenerateOtp(user *models.User) int {
 
 	return token
 }
+
+func CheckValidOtp(otp int, mobile string) models.Otp {
+	var otpModel models.Otp
+
+	timeQuery := time.Now().Add(time.Minute * -2)
+
+	database.DB.Model(&otpModel).
+		Where("token = ? AND mobile = ? AND created_at >= ?", otp, mobile, timeQuery).First(&otpModel)
+
+	return otpModel
+}
+
+func RemoveAllMobileOtp(mobile string) {
+	var res interface{}
+	database.DB.Model(&models.Otp{}).Where("mobile = ?", mobile).Delete(&res)
+}

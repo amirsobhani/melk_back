@@ -2,8 +2,10 @@ package clientUserController
 
 import (
 	"github.com/amirsobhani/melk_back/app/Repository/otpClientRepository"
+	"github.com/amirsobhani/melk_back/app/Repository/userClientRepository"
 	"github.com/amirsobhani/melk_back/app/models"
 	"github.com/amirsobhani/melk_back/app/requests"
+	"github.com/amirsobhani/melk_back/app/requests/clientOtp"
 	"github.com/amirsobhani/melk_back/infastructure"
 	"github.com/gofiber/fiber/v2"
 )
@@ -25,11 +27,18 @@ func Signup(c *fiber.Ctx) error {
 		})
 	}
 
+	if err := userClientRepository.CheckExists(user.Mobile); err == nil {
+		return infastructure.Output(c, &infastructure.OutputStruct{
+			Message: "user exists please sign-in",
+			Status:  fiber.StatusBadRequest,
+		})
+	}
+
 	countOtp := otpClientRepository.CountValidation(user.Mobile)
 
 	if countOtp > 4 {
 		return infastructure.Output(c, &infastructure.OutputStruct{
-			Message: "too many request please later",
+			Message: "too many request please try later",
 			Status:  fiber.StatusTooManyRequests,
 		})
 	}
@@ -37,6 +46,71 @@ func Signup(c *fiber.Ctx) error {
 	token := otpClientRepository.GenerateOtp(user)
 
 	return infastructure.Output(c, &infastructure.OutputStruct{
-		Data: token,
+		Data:    token,
+		Message: "otp token has been send",
+	})
+}
+
+func Check(c *fiber.Ctx) error {
+	userId, err := infastructure.VerifyJWT(c)
+	return c.JSON(fiber.Map{
+		"data":     userId,
+		"err":      err,
+		"asdfasdf": c.Get("userId"),
+	})
+}
+
+func OtpValidator(c *fiber.Ctx) error {
+
+	otp := new(clientOtp.OtpValidator)
+
+	if err := c.BodyParser(otp); err != nil {
+		return infastructure.Output(c, &infastructure.OutputStruct{
+			Message: err.Error(),
+			Status:  fiber.StatusInternalServerError,
+		})
+	}
+
+	if errors := requests.ValidateStruct(*otp); errors != nil {
+		return infastructure.Output(c, &infastructure.OutputStruct{
+			Message: errors,
+			Status:  fiber.StatusBadRequest,
+		})
+	}
+
+	check := otpClientRepository.CheckValidOtp(otp.Token, otp.Mobile)
+
+	if check.ID == 0 {
+		return infastructure.Output(c, &infastructure.OutputStruct{
+			Message: "otp token not valid",
+			Status:  fiber.StatusBadRequest,
+		})
+	}
+
+	otpClientRepository.RemoveAllMobileOtp(otp.Mobile)
+
+	var user models.User
+
+	if err := userClientRepository.CheckExists(otp.Mobile); err == nil {
+
+		var userTempData = check.TempData.Data()
+
+		user = userClientRepository.Create(userTempData)
+	} else {
+		user = userClientRepository.FindByMobile(otp.Mobile)
+	}
+
+	token, err := infastructure.GenerateJWT(user.ID)
+
+	if err != nil {
+		return infastructure.Output(c, &infastructure.OutputStruct{
+			Message: err.Error(),
+			Status:  fiber.StatusBadRequest,
+		})
+	}
+
+	return infastructure.Output(c, &infastructure.OutputStruct{
+		Data:    token,
+		Message: "user successful login",
 	})
 }
