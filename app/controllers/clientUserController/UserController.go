@@ -27,7 +27,7 @@ func Signup(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := userClientRepository.CheckExists(user.Mobile); err == nil {
+	if userClientRepository.CheckExists(user.Mobile) {
 		return infastructure.Output(c, &infastructure.OutputStruct{
 			Message: "user exists please sign-in",
 			Status:  fiber.StatusBadRequest,
@@ -54,9 +54,9 @@ func Signup(c *fiber.Ctx) error {
 func Check(c *fiber.Ctx) error {
 	userId, err := infastructure.VerifyJWT(c)
 	return c.JSON(fiber.Map{
-		"data":     userId,
-		"err":      err,
-		"asdfasdf": c.Get("userId"),
+		"data": userId,
+		"err":  err,
+		"get":  c.Locals("user_id"),
 	})
 }
 
@@ -91,13 +91,13 @@ func OtpValidator(c *fiber.Ctx) error {
 
 	var user models.User
 
-	if err := userClientRepository.CheckExists(otp.Mobile); err == nil {
+	if userClientRepository.CheckExists(otp.Mobile) {
+		user = userClientRepository.FindByMobile(otp.Mobile)
 
+	} else {
 		var userTempData = check.TempData.Data()
 
 		user = userClientRepository.Create(userTempData)
-	} else {
-		user = userClientRepository.FindByMobile(otp.Mobile)
 	}
 
 	token, err := infastructure.GenerateJWT(user.ID)

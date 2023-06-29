@@ -5,13 +5,15 @@ import (
 	"github.com/amirsobhani/melk_back/database"
 )
 
-func CheckExists(mobile string) error {
+func CheckExists(mobile string) bool {
 	var user = models.User{
 		Mobile: mobile,
 	}
 	var exists bool
 
-	return database.DB.Model(user).First(&exists).Error
+	database.DB.Model(user).First(&exists)
+
+	return exists
 }
 
 func Create(data models.User) models.User {

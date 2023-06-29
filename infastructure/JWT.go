@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -35,9 +36,13 @@ func GenerateJWT(UserId uint) (string, error) {
 	return signedToken, nil
 }
 
-func VerifyJWT(c *fiber.Ctx) (userId interface{}, err error) {
+func VerifyJWT(c *fiber.Ctx) (userId int, err error) {
 	tkn := c.GetReqHeaders()["Authorization"]
 	splitToken := strings.Split(tkn, "Bearer ")
+
+	if len(splitToken) != 2 {
+		return 0, errors.New("bearer Token Not Set")
+	}
 
 	// تعریف کلیمز برای استفاده در احراز هویت توکن
 	claims := jwt.MapClaims{}
@@ -65,5 +70,7 @@ func VerifyJWT(c *fiber.Ctx) (userId interface{}, err error) {
 	// بررسی اعتبار سنجی زمانی توکن
 	err = claims.Valid()
 
-	return claims["userID"], err
+	id, _ := strconv.Atoi(fmt.Sprintf("%v", claims["userID"]))
+
+	return id, err
 }
