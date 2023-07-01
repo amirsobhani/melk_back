@@ -36,7 +36,7 @@ func GenerateJWT(UserId uint) (string, error) {
 	return signedToken, nil
 }
 
-func VerifyJWT(c *fiber.Ctx) (userId int, err error) {
+func VerifyJWT(c *fiber.Ctx) (userId int64, err error) {
 	tkn := c.GetReqHeaders()["Authorization"]
 	splitToken := strings.Split(tkn, "Bearer ")
 
@@ -72,5 +72,5 @@ func VerifyJWT(c *fiber.Ctx) (userId int, err error) {
 
 	id, _ := strconv.Atoi(fmt.Sprintf("%v", claims["userID"]))
 
-	return id, err
+	return int64(id), err
 }

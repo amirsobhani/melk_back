@@ -39,7 +39,7 @@ func Connect() error {
 }
 
 func Migrate() error {
-	err := DB.AutoMigrate(&models.User{}, &models.Otp{})
+	err := DB.AutoMigrate(&models.User{}, &models.Otp{}, &models.ProvinceAndCity{}, &models.RealState{})
 
 	if err != nil {
 		return err
