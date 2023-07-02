@@ -42,3 +42,11 @@ func Create(c *fiber.Ctx) error {
 		Status:  fiber.StatusCreated,
 	})
 }
+
+func Records(c *fiber.Ctx) error {
+	realStateModel := realStateClientRepository.Records(c)
+
+	return infastructure.OutputList(c, realStateModel, &infastructure.OutputStruct{
+		Data: realStateModel,
+	})
+}

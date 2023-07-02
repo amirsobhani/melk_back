@@ -19,4 +19,5 @@ func Api(app *fiber.App) {
 
 	//real state route
 	api.Post("real-state", clientRealEstateController.Create)
+	api.Get("real-state", clientRealEstateController.Records)
 }
