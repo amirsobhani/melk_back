@@ -8,12 +8,15 @@ import (
 )
 
 func Api(app *fiber.App) {
-	app.Post("/api/signup", clientUserController.Signup)
-	app.Post("/api/otp-validate", clientUserController.OtpValidator)
+	api := app.Group("/api/")
 
-	app.Use(middlewares.CheckAuth)
-	app.Get("/api/check", clientUserController.Check)
+	api.Post("signup", clientUserController.Signup)
+	api.Post("signin", clientUserController.SignIn)
+	api.Post("otp-validate", clientUserController.OtpValidator)
+
+	api.Use(middlewares.CheckAuth)
+	api.Get("check", clientUserController.Check)
 
 	//real state route
-	app.Post("/api/real-state", clientRealEstateController.Create)
+	api.Post("real-state", clientRealEstateController.Create)
 }

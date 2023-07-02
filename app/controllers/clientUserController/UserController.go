@@ -51,6 +51,34 @@ func Signup(c *fiber.Ctx) error {
 	})
 }
 
+func SignIn(c *fiber.Ctx) error {
+	userModel := new(models.User)
+
+	if err := c.BodyParser(userModel); err != nil {
+		return infastructure.Output(c, &infastructure.OutputStruct{
+			Message: err.Error(),
+			Status:  fiber.StatusInternalServerError,
+		})
+	}
+
+	if !userClientRepository.CheckExists(userModel.Mobile) {
+		return infastructure.Output(c, &infastructure.OutputStruct{
+			Message: "user not exists please sign-up first",
+			Status:  fiber.StatusBadRequest,
+		})
+	}
+
+	user := userClientRepository.FindByMobile(userModel.Mobile)
+
+	token := otpClientRepository.GenerateOtp(&user)
+
+	return infastructure.Output(c, &infastructure.OutputStruct{
+		Data:    token,
+		Message: "otp token has been send",
+	})
+
+}
+
 func Check(c *fiber.Ctx) error {
 	userId, err := infastructure.VerifyJWT(c)
 	return c.JSON(fiber.Map{

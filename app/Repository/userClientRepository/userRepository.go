@@ -9,11 +9,10 @@ func CheckExists(mobile string) bool {
 	var user = models.User{
 		Mobile: mobile,
 	}
-	var exists bool
 
-	database.DB.Model(user).First(&exists)
+	database.DB.Model(user).Where("mobile = ?", mobile).First(&user)
 
-	return exists
+	return user.ID > 0
 }
 
 func Create(data models.User) models.User {
