@@ -3,7 +3,6 @@ package infastructure
 import (
 	"github.com/amirsobhani/melk_back/database"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 	"math"
 )
 
@@ -42,14 +41,4 @@ func OutputList(c *fiber.Ctx, dataModel interface{}, output *OutputStruct) error
 		},
 		"message": output.Message,
 	})
-}
-
-func Paginate(c *fiber.Ctx) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		page := c.QueryInt("page", 1)
-		pageSize := c.QueryInt("page-size", 10)
-		offset := pageSize * (page - 1)
-
-		return db.Offset(offset).Limit(pageSize)
-	}
 }
