@@ -1,8 +1,6 @@
 package clientUserController
 
 import (
-	"context"
-	"fmt"
 	"github.com/amirsobhani/melk_back/app/Repository/otpClientRepository"
 	"github.com/amirsobhani/melk_back/app/Repository/userClientRepository"
 	"github.com/amirsobhani/melk_back/app/models"
@@ -11,8 +9,6 @@ import (
 	"github.com/amirsobhani/melk_back/infastructure"
 	"github.com/amirsobhani/melk_back/queue"
 	"github.com/gofiber/fiber/v2"
-	amqp "github.com/rabbitmq/amqp091-go"
-	"time"
 )
 
 func Signup(c *fiber.Ctx) error {
@@ -58,43 +54,21 @@ func Signup(c *fiber.Ctx) error {
 
 func Check(c *fiber.Ctx) error {
 	//userId, err := infastructure.VerifyJWT(c)
+	//return infastructure.Output(c, &infastructure.OutputStruct{
+	//	Message: err,
+	//	Data:  userId,
+	//})
+
+	user := userClientRepository.FindByMobile("9198508964")
+
+	config := queue.Config{}
+	config.PublishToQueue(user)
 
 	//defer func() {
 	//	if r := recover(); r != nil {
 	//		log.Fatalf("Runtime error: %v", r)
 	//	}
 	//}()
-
-	q, err := queue.ChannelRabbitMQ.QueueDeclare(
-		"hello", // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
-	)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	body := "Hello World!"
-	err = queue.ChannelRabbitMQ.PublishWithContext(ctx,
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
-		})
-
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	return nil
 

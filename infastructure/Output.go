@@ -1,6 +1,8 @@
 package infastructure
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 type OutputStruct struct {
 	Data    interface{}

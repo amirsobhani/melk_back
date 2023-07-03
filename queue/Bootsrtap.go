@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +12,15 @@ import (
 )
 
 var ChannelRabbitMQ *amqp.Channel
+
+type Config struct {
+	DefaultQueue     string
+	Durable          bool
+	DeleteWhenUnused bool
+	Exclusive        bool
+	NoWait           bool
+	TimeOut          time.Duration
+}
 
 func Connect() {
 	Port := os.Getenv("AMQP_PORT")
@@ -26,7 +36,7 @@ func Connect() {
 
 	fmt.Println("Connect Successful to RabbitMQ")
 
-	defer connectRabbitMQ.Close()
+	//defer connectRabbitMQ.Close()
 
 	// Let's start by opening a channel to our RabbitMQ
 	// instance over the connection we have already
@@ -38,13 +48,13 @@ func Connect() {
 
 	fmt.Println("Connect Successful to RabbitMQ Channel")
 
-	defer ChannelRabbitMQ.Close()
+	//defer ChannelRabbitMQ.Close()
 
 	if err != nil {
 		failOnError(err, "Failed to Declare RabbitMQ Queue")
 	}
 
-	failOnError(err, "Success Declare RabbitMQ Queue")
+	fmt.Println("Success Declare RabbitMQ Queue")
 }
 
 func failOnError(err error, msg string) {
@@ -53,29 +63,64 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func testPub() {
+func (config *Config) PublishToQueue(v interface{}) {
+	config.defaultSetter()
+
 	q, err := ChannelRabbitMQ.QueueDeclare(
-		"hello", // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
+		config.DefaultQueue,     // name
+		config.Durable,          // durable
+		config.DeleteWhenUnused, // delete when unused
+		config.Exclusive,        // exclusive
+		config.NoWait,           // no-wait
+		nil,                     // arguments
 	)
+
 	failOnError(err, "Failed to declare a queue")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), config.TimeOut)
+
 	defer cancel()
 
-	body := "Hello World!"
-	err = ChannelRabbitMQ.PublishWithContext(ctx,
+	body, err := json.Marshal(v)
+
+	failOnError(err, "Failed to Marshal value")
+
+	err = ChannelRabbitMQ.PublishWithContext(
+		ctx,
 		"",     // exchange
 		q.Name, // routing key
 		false,  // mandatory
 		false,  // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body:        []byte(body),
+			Body:        body,
 		})
+
 	failOnError(err, "Failed to publish a message")
+}
+
+func (config *Config) defaultSetter() {
+	if config.DefaultQueue == "" {
+		config.DefaultQueue = os.Getenv("AMQP_DEFAULT_QUEUE")
+	}
+
+	if &config.Durable == nil {
+		config.Durable = false
+	}
+
+	if &config.Exclusive == nil {
+		config.Exclusive = false
+	}
+
+	if &config.NoWait == nil {
+		config.NoWait = false
+	}
+
+	if &config.DeleteWhenUnused == nil {
+		config.DeleteWhenUnused = false
+	}
+
+	if config.TimeOut == 0 {
+		config.TimeOut = 5 * time.Second
+	}
 }
