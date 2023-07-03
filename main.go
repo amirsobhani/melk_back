@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"github.com/amirsobhani/melk_back/database"
+	"github.com/amirsobhani/melk_back/queue"
 	"github.com/amirsobhani/melk_back/route"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -21,6 +22,8 @@ func main() {
 	if err := database.Migrate(); err != nil {
 		log.Fatalf("problem with migrating to database: %s", err)
 	}
+
+	queue.Connect()
 
 	app := fiber.New(fiber.Config{
 		// Override default error handler

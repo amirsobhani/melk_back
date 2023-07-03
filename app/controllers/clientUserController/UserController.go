@@ -7,6 +7,7 @@ import (
 	"github.com/amirsobhani/melk_back/app/requests"
 	"github.com/amirsobhani/melk_back/app/requests/clientOtp"
 	"github.com/amirsobhani/melk_back/infastructure"
+	"github.com/amirsobhani/melk_back/queue"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -80,12 +81,25 @@ func SignIn(c *fiber.Ctx) error {
 }
 
 func Check(c *fiber.Ctx) error {
-	userId, err := infastructure.VerifyJWT(c)
-	return c.JSON(fiber.Map{
-		"data": userId,
-		"err":  err,
-		"get":  c.Locals("user_id"),
-	})
+	//userId, err := infastructure.VerifyJWT(c)
+	//return infastructure.Output(c, &infastructure.OutputStruct{
+	//	Message: err,
+	//	Data:  userId,
+	//})
+
+	user := userClientRepository.FindByMobile("9198508964")
+
+	config := queue.Config{}
+	config.PublishToQueue(user)
+
+	//defer func() {
+	//	if r := recover(); r != nil {
+	//		log.Fatalf("Runtime error: %v", r)
+	//	}
+	//}()
+
+	return nil
+
 }
 
 func OtpValidator(c *fiber.Ctx) error {
