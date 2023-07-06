@@ -99,6 +99,34 @@ func (config *Config) PublishToQueue(v interface{}) {
 	failOnError(err, "Failed to publish a message")
 }
 
+func (config *Config) ConsumeQueue() {
+	config.defaultSetter()
+
+	// declaring consumer with its properties over channel opened
+	msgs, err := ChannelRabbitMQ.Consume(
+		config.DefaultQueue, // queue
+		"",                  // consumer
+		true,                // auto ack
+		config.Exclusive,    // exclusive
+		false,               // no local
+		config.NoWait,       // no wait
+		nil,                 //args
+	)
+
+	failOnError(err, "Failed to consume a message")
+
+	// print consumed messages from queue
+	forever := make(chan bool)
+	go func() {
+		for msg := range msgs {
+			fmt.Printf("Received Message: %s\n", msg.Body)
+		}
+	}()
+
+	fmt.Println("Waiting for messages...")
+	<-forever
+}
+
 func (config *Config) defaultSetter() {
 	if config.DefaultQueue == "" {
 		config.DefaultQueue = os.Getenv("AMQP_DEFAULT_QUEUE")

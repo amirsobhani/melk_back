@@ -7,7 +7,6 @@ import (
 	"github.com/amirsobhani/melk_back/app/requests"
 	"github.com/amirsobhani/melk_back/app/requests/clientOtp"
 	"github.com/amirsobhani/melk_back/infastructure"
-	"github.com/amirsobhani/melk_back/queue"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -81,16 +80,18 @@ func SignIn(c *fiber.Ctx) error {
 }
 
 func Check(c *fiber.Ctx) error {
-	//userId, err := infastructure.VerifyJWT(c)
-	//return infastructure.Output(c, &infastructure.OutputStruct{
-	//	Message: err,
-	//	Data:  userId,
-	//})
+	userId, err := infastructure.VerifyJWT(c)
+	return infastructure.Output(c, &infastructure.OutputStruct{
+		Message: err,
+		Data:    userId,
+	})
 
-	user := userClientRepository.FindByMobile("9198508964")
+	//user := userClientRepository.FindByMobile("9198508964")
 
-	config := queue.Config{}
-	config.PublishToQueue(user)
+	//config := queue.Config{}
+	//config.PublishToQueue(user)
+	//
+	//config.ConsumeQueue()
 
 	//defer func() {
 	//	if r := recover(); r != nil {
